@@ -69,7 +69,7 @@ void setup() {
     Serial.println("Starting test: \n");
 }
 //************************************************************
-// Method: setup
+// Method: loop()
 // Input: ENCODER_LEFT, ENCODER_RIGHT
 // Description: Initialize bluetooth on Serial2
 //    set pins for motors and encoders
