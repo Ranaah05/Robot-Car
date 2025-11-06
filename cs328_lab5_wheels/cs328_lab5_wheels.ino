@@ -70,7 +70,7 @@ void setup() {
 }
 //************************************************************
 // Method: loop()
-// Input: ENCODER_LEFT, ENCODER_RIGHT
+// Input: NONE
 // Description: Initialize bluetooth on Serial2
 //    set pins for motors and encoders
 // 
