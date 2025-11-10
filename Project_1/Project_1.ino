@@ -12,6 +12,17 @@
 //  BUTTONS FOR DEGREES AND SPEED
 // oled DISPLAYING SPEED AND DEGREES AND TIMER 
 // SWITCH CHANGING BUTTONS FROM SPEED INCREMEMNTS TO DEGREES
+
+#define MotorPWM_A 4
+#define MotorPWM_B 5
+
+
+#define INA1A 32
+#define INA2A 34
+// Right Motor Rotation pins
+#define INA1B 30
+#define INA2B 36
+
 #include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
@@ -37,7 +48,7 @@
 #define LED_RLT_pin	31	// Rear Left turning LED blinking -- yellow exterior -- yellow wire
 #define LED_RLR_pin	29	// Rear Left Reverse LED -- White interior -- white wire
 #define LED_RLB_pin	27	// Rear Left Brake LED  -- Red center -- red wire
-#define MODE_SWITCH 9 // TO:DO I DONT REMEMBER WHAT PIN THIS IS HOOKED UP TO BUT THIS WILL TOGGLE DEGREES OR SPEED
+#define MODE_SWITCH 10 // TO:DO I DONT REMEMBER WHAT PIN THIS IS HOOKED UP TO BUT THIS WILL TOGGLE DEGREES OR SPEED
 
 // OLED INSTANCE
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
@@ -77,6 +88,15 @@ void setup() {
   display.clearDisplay();
   display.drawPixel(10,10, SSD1306_WHITE);
   display.display();
+  pinMode(MODE_SWITCH, INPUT_PULLUP);
+
+    pinMode(MotorPWM_A, OUTPUT);
+    pinMode(MotorPWM_B, OUTPUT);
+    pinMode(INA1A, OUTPUT);
+    pinMode(INA2A, OUTPUT);
+    pinMode(INA1B, OUTPUT);
+    pinMode(INA2B, OUTPUT);
+
 
 
 }
@@ -124,6 +144,9 @@ void loop() {
     if (cmd == "REVERSE"){
       reverse_lights();
     }
+    if (cmd == "Foward"){
+      go_foward();
+    }
   }
 }
 // Shuts all lights off
@@ -152,5 +175,46 @@ void on_lights(){
 }
 
 void go_forward(){
+  speed = 100;  // Adjust this value (0-255) for desired speed
+  analogWrite(MotorPWM_A, speed);
+  analogWrite(MotorPWM_B, speed);
+
+  // Both motors forward
+  digitalWrite(INA1A, HIGH);
+  digitalWrite(INA2A, LOW);
+  digitalWrite(INA1B, HIGH);
+  digitalWrite(INA2B, LOW);
+
+  // Calculate time to run (adjust 1000 ms/ft based on testing)
+  unsigned long duration = feet * 1000;  // milliseconds per foot
+  delay(duration);
+    // Stop motors
+  stop_motors();  
 
 } // SPEED AND LENGTH
+
+// Turn left 90 degrees in place
+void TurnLeft(int speed, int duration_ms){
+  // Turn ON left blinkers
+  digitalWrite(LED_FLT_pin, HIGH);
+  digitalWrite(LED_RLT_pin, HIGH);
+
+  // Left motor backward
+  analogWrite(MotorPWM_A, speed);
+  digitalWrite(INA1A, LOW);
+  digitalWrite(INA2A, HIGH);
+
+  // Right motor forward
+  analogWrite(MotorPWM_B, speed);
+  digitalWrite(INA1B, HIGH);
+  digitalWrite(INA2B, LOW);
+
+  delay(duration_ms); // adjust for ~90°
+
+  // Stop both motors
+  // Stop();
+
+  // Turn OFF blinkers
+  digitalWrite(LED_FLT_pin, LOW);
+  digitalWrite(LED_RLT_pin, LOW);
+}
