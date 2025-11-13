@@ -50,7 +50,10 @@
 #define LED_RLR_pin	29	// Rear Left Reverse LED -- White interior -- white wire
 #define LED_RLB_pin	27	// Rear Left Brake LED  -- Red center -- red wire
 
+/// BUTTONS AND SWITCH
 #define MODE_SWITCH A0 // Toggle turn degrees or speed for button incrementing
+#define UB1 10 // Increment up
+#define UB2 12 // Increment down
 
 // OLED INSTANCE
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
@@ -74,7 +77,6 @@ void setup() {
 
   // Initialize BLUETOOTH
   Serial.begin(9600);
-
   Serial2.begin(38400);
   Serial.println("Serial2 initialized at 38400 baud.");
 
@@ -90,17 +92,20 @@ void setup() {
   display.clearDisplay();
   display.drawPixel(10,10, SSD1306_WHITE);
   display.display();
+
+  // Initialize Switch
   pinMode(MODE_SWITCH, INPUT_PULLUP);
 
+  // Initialize Buttons
+  pinMode(UB1, INPUT_PULLUP);
+  pinMode(UB2, INPUT_PULLUP);
+  // Initialize Motors
     pinMode(MotorPWM_A, OUTPUT);
     pinMode(MotorPWM_B, OUTPUT);
     pinMode(INA1A, OUTPUT);
     pinMode(INA2A, OUTPUT);
     pinMode(INA1B, OUTPUT);
     pinMode(INA2B, OUTPUT);
-
-
-
 }
 
 void loop() {
