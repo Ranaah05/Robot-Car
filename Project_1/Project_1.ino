@@ -27,6 +27,7 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+
 // OLED DEFIINITIONS
 #define SCREEN_WIDTH 128 // Width in px
 #define SCREEN_HEIGHT 64 // Height in px
@@ -48,15 +49,16 @@
 #define LED_RLT_pin	31	// Rear Left turning LED blinking -- yellow exterior -- yellow wire
 #define LED_RLR_pin	29	// Rear Left Reverse LED -- White interior -- white wire
 #define LED_RLB_pin	27	// Rear Left Brake LED  -- Red center -- red wire
-#define MODE_SWITCH 10 // TO:DO I DONT REMEMBER WHAT PIN THIS IS HOOKED UP TO BUT THIS WILL TOGGLE DEGREES OR SPEED
+
+#define MODE_SWITCH A0 // Toggle turn degrees or speed for button incrementing
 
 // OLED INSTANCE
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
+int speed = 130;
+int duration_ms = 3000;
 
-// SPEED + DEGREES
-int speed = 0;
-int degrees = 0;
+int feet = 3;
 
 // ARRAY OF LIGHT PINS
 int LED_pins[] = {LED_FLT_pin, LED_FLH_pin, LED_FLL_pin,
@@ -103,7 +105,6 @@ void setup() {
 
 void loop() {
   // Display Speed and Degrees TO:DO TEST AND SEE IF THIS WORKS FOR THE OLED..
-  // TO:DO YOU MIGHT NEED TO INITIALIZE THE PINS BUT I DONT THINK SO.. THEYRE IN ANNOUNCEMENTS IF SO
   display.clearDisplay();
   display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
@@ -111,14 +112,14 @@ void loop() {
   display.setCursor(0, 0);
   if (digitalRead(MODE_SWITCH) == LOW) { // Switch is ON 
     String text = "Speed: " + String(speed);
-    
     display.println(text);
   } 
   else { // Switch is OFF
-    String text = "Degrees: " + String(degrees);
+    String text = "Turn duration: " + String(duration_ms);
     display.println(text);
   }
   display.display();
+
 
 // IF BLUETOOTH AVAILABLE
 // TO:DO PUT THIS IN A FUNCTION CALLED BLUETOOTH... MAYBE THIS IS TRIGGERED BY START.
@@ -138,14 +139,14 @@ void loop() {
     }
     // Break lights
     if (cmd == "BREAK"){
-      break_lights();
+      breaks();
     }
     // Reverse lights
     if (cmd == "REVERSE"){
-      reverse_lights();
+      reverse();
     }
     if (cmd == "Foward"){
-      go_foward();
+      go_forward();
     }
   }
 }
@@ -156,13 +157,17 @@ void off_lights(){
       digitalWrite(LED_pins[i], LOW); 
   }
 }
-// Break function
-void break_lights(){
+
+// Breaks function
+void breaks(){
   digitalWrite(LED_RRB_pin, HIGH);
   digitalWrite(LED_RLB_pin, HIGH);
+  analogWrite(MotorPWM_A, 0);
+  analogWrite(MotorPWM_B, 0);
 }
+
 // Reverse function
-void reverse_lights(){
+void reverse(){
   digitalWrite(LED_RRR_pin, HIGH);
   digitalWrite(LED_RLR_pin, HIGH);
 }
@@ -188,13 +193,13 @@ void go_forward(){
   // Calculate time to run (adjust 1000 ms/ft based on testing)
   unsigned long duration = feet * 1000;  // milliseconds per foot
   delay(duration);
-    // Stop motors
-  stop_motors();  
+  // Stop motors
+  breaks();
 
 } // SPEED AND LENGTH
 
 // Turn left 90 degrees in place
-void TurnLeft(int speed, int duration_ms){
+void TurnLeft(){
   // Turn ON left blinkers
   digitalWrite(LED_FLT_pin, HIGH);
   digitalWrite(LED_RLT_pin, HIGH);
@@ -212,7 +217,7 @@ void TurnLeft(int speed, int duration_ms){
   delay(duration_ms); // adjust for ~90°
 
   // Stop both motors
-  // Stop();
+  breaks();
 
   // Turn OFF blinkers
   digitalWrite(LED_FLT_pin, LOW);
