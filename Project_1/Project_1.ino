@@ -58,10 +58,11 @@
 // OLED INSTANCE
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-int speed = 130;
-int duration_ms = 3000;
+int speed = 80;
+int duration_ms = 680;
+int j = 0;
 
-int feet = 3;
+float feet = 2.6;
 
 // ARRAY OF LIGHT PINS
 int LED_pins[] = {LED_FLT_pin, LED_FLH_pin, LED_FLL_pin,
@@ -94,7 +95,7 @@ void setup() {
   display.display();
 
   // Initialize Switch
-  pinMode(MODE_SWITCH, INPUT_PULLUP);
+  pinMode(MODE_SWITCH, INPUT);
 
   // Initialize Buttons
   pinMode(UB1, INPUT_PULLUP);
@@ -124,10 +125,10 @@ void loop() {
     display.println(text);
   }
   display.display();
-
+  int state = digitalRead(MODE_SWITCH);
+  Serial.println(state);  // 0 = pressed (LOW), 1 = released (HIGH)
 
 // IF BLUETOOTH AVAILABLE
-// TO:DO PUT THIS IN A FUNCTION CALLED BLUETOOTH... MAYBE THIS IS TRIGGERED BY START.
   if (Serial2.available()){
     // STRING COMMAND FROM INPUT
     String cmd = Serial2.readStringUntil('\n'); // READS UNTIL NEWLINE CHARACTER
@@ -150,10 +151,12 @@ void loop() {
     if (cmd == "REVERSE"){
       reverse();
     }
-    if (cmd == "Foward"){
-      go_forward();
+    if (cmd == "Forward"){
+      for(j = 0; j < 4; j++){
+        go_forward();
+      }
     }
-  }
+  } 
 }
 // Shuts all lights off
 void off_lights(){
@@ -185,7 +188,9 @@ void on_lights(){
 }
 
 void go_forward(){
-  speed = 100;  // Adjust this value (0-255) for desired speed
+  if (j == 1){
+    feet = 2.2;
+  }
   analogWrite(MotorPWM_A, speed);
   analogWrite(MotorPWM_B, speed);
 
@@ -200,11 +205,14 @@ void go_forward(){
   delay(duration);
   // Stop motors
   breaks();
+  delay(1000);
+  TurnLeft();
 
 } // SPEED AND LENGTH
 
 // Turn left 90 degrees in place
 void TurnLeft(){
+  int rightspeed = 90;
   // Turn ON left blinkers
   digitalWrite(LED_FLT_pin, HIGH);
   digitalWrite(LED_RLT_pin, HIGH);
@@ -215,7 +223,7 @@ void TurnLeft(){
   digitalWrite(INA2A, HIGH);
 
   // Right motor forward
-  analogWrite(MotorPWM_B, speed);
+  analogWrite(MotorPWM_B, rightspeed);
   digitalWrite(INA1B, HIGH);
   digitalWrite(INA2B, LOW);
 
@@ -223,7 +231,7 @@ void TurnLeft(){
 
   // Stop both motors
   breaks();
-
+  delay(1000);
   // Turn OFF blinkers
   digitalWrite(LED_FLT_pin, LOW);
   digitalWrite(LED_RLT_pin, LOW);
