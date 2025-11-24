@@ -159,7 +159,7 @@ void bluetooth_commands(){
 //************************************************************
 // Method: breaks()
 // Input: Serial2 Bluetooth Input from Phone
-// Description: Read 
+// Description: Break the car
 //************************************************************
 void breaks(){
   digitalWrite(LED_RRB_pin, HIGH);
