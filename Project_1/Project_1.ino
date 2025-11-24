@@ -150,7 +150,7 @@ void bluetooth_commands(){
       stopTimer();
       displayTimer();   // Shows final time
       display.display();
-      delay(10000);
+      delay(10000); // display final timer for at least ten seconds
       timerValue = 0;
     }
   } 
@@ -190,7 +190,7 @@ void go_forward(){
   digitalWrite(INA1B, HIGH);
   digitalWrite(INA2B, LOW);
 
-  // Calculate time to run (**adjust 1000 ms/ft based on testing**)
+  // Calculate time to run 
   unsigned long duration = feet * 1000;  // milliseconds per foot
   delay(duration);
   // Stop motors
@@ -215,7 +215,7 @@ void turn_left(){
   // Set speed of the right motor a little higher than the left
   int rightspeed = 90;
 
-// Blinker
+  // Blinker
   digitalWrite(LED_FLT_pin, HIGH); 
   digitalWrite(LED_RLT_pin, HIGH); 
   delay(100);
