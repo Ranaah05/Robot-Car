@@ -42,11 +42,6 @@
 #define LED_RLR_pin	29	// Rear Left Reverse LED -- White interior -- white wire
 #define LED_RLB_pin	27	// Rear Left Brake LED  -- Red center -- red wire
 
-/// Buttons and Switch Definitions
-#define MODE_SWITCH A0 // Toggle turn degrees or speed for button incrementing
-#define UB1 10 // Increment up
-#define UB2 12 // Increment down
-
 // OLED Instance
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
@@ -57,10 +52,6 @@ int j = 0;
 
 // Global distance we want car to travel
 float feet = 2.25;
-
-// Debounce buttons
-bool lastUB1 = HIGH;
-bool lastUB2 = HIGH;
 
 // OLED Timer
 unsigned long timerStart = 0;
@@ -76,7 +67,7 @@ int LED_pins[] = {LED_FLT_pin, LED_FLH_pin, LED_FLL_pin,
 
 //************************************************************
 // Method: setup
-// Input: MODE_SWITCH, UB1, UB2,
+// Input: NONE
 // Description: Initialize bluetooth on Serial2
 //    set pins for motors and encoders
 // 
@@ -105,13 +96,6 @@ void setup() {
   display.drawPixel(10,10, SSD1306_WHITE);
   display.display();
 
-  // Initialize Switch
-  pinMode(MODE_SWITCH, INPUT);
-
-  // Initialize Buttons
-  pinMode(UB1, INPUT_PULLUP);
-  pinMode(UB2, INPUT_PULLUP);
-
   // Initialize Motors
     pinMode(MotorPWM_A, OUTPUT);
     pinMode(MotorPWM_B, OUTPUT);
@@ -129,44 +113,12 @@ void setup() {
 //************************************************************
 // Method: loop
 // Input: NONE
-// Description: Initialize bluetooth on Serial2
-//    set pins for motors and encoders
+// Description: run the bluetooth_commands() function
+//   to take bluetooth input whenever it is sent
 // 
 //************************************************************
 void loop() {
-  // BUTTONS FOR INCREMENTING MAY NOT BE USEFUL
-  bool ub1 = debounce(UB1);
-  bool ub2 = debounce(UB2);
-  bool mode = debounce(MODE_SWITCH);
-    if (mode) {
-    // SPEED MODE
-    if (ub1 == LOW && lastUB1 == HIGH) speed += 10;
-    if (UB2 == LOW && lastUB2 == HIGH) speed -= 10;
-    Serial.println(speed);
-
-  } else {
-    // TURN DURATION MODE
-    if (ub1 == LOW && lastUB1 == HIGH) duration_ms += 10;
-    if (ub2 == LOW && lastUB2 == HIGH) duration_ms -= 10;
-    Serial.println(duration_ms);
-  }
-
-  lastUB1 = ub1;
-  lastUB2 = ub2;
-  display.clearDisplay();
-  display.setTextSize(1);
-  display.setTextColor(SSD1306_WHITE);
-  display.setTextWrap(false);
-  display.setCursor(0, 0);
-  if (mode) {
-    display.println("Speed: " + String(speed));
-  } else {
-    display.println("Turn duration: " + String(duration_ms));
-  }
-  display.display();
-
   bluetooth_commands();
-
 }
 
 
@@ -219,7 +171,9 @@ void breaks(){
 //************************************************************
 // Method: go_forward()
 // Input: NONE
-// Description: Read 
+// Description: Travel forward however many feet are specified
+// at the specified speed, then call breaks() and turn_Left() 
+// functions
 //************************************************************
 void go_forward(){
   // On second iteration begin traveling less
@@ -254,12 +208,14 @@ void go_forward(){
 //************************************************************
 // Method: turn_left()
 // Input: NONE
-// Description: Read 
+// Description: Function that turns the car to the left and also
+// puts on the cars blinker 
 //************************************************************
 void turn_left(){
   // Set speed of the right motor a little higher than the left
   int rightspeed = 90;
 
+// Blinker
   digitalWrite(LED_FLT_pin, HIGH); 
   digitalWrite(LED_RLT_pin, HIGH); 
   delay(100);
@@ -271,6 +227,7 @@ void turn_left(){
   delay(100);
   digitalWrite(LED_FLT_pin, LOW);
   digitalWrite(LED_RLT_pin, LOW); 
+
   // Left motor backward
   analogWrite(MotorPWM_A, speed);
   digitalWrite(INA1A, LOW);
@@ -281,45 +238,50 @@ void turn_left(){
   digitalWrite(INA1B, HIGH);
   digitalWrite(INA2B, LOW);
 
-  delay(duration_ms); // adjust for ~90°
+  delay(duration_ms); // turn duration adjustment
 
   // Stop both motors
   breaks();
   delay(1000);
+
   // Turn OFF blinkers
   digitalWrite(LED_FLT_pin, LOW);
   digitalWrite(LED_RLT_pin, LOW);
 }
 
 //************************************************************
-// Method: bluetooth_commands()
-// Input: Serial2 Bluetooth Input from Phone
-// Description: Read 
+// Method: displayTimer()
+// Input: NONE 
+// Description: Display timer after car finishes its run
 //************************************************************
-bool debounce(int pin) {
-  bool reading = digitalRead(pin);
-  delay(20); // debounce delay
-  return (digitalRead(pin) == reading) ? reading : !reading;
-}
-
 void displayTimer() {
     // Draw big timer under first line
-    display.setTextSize(3);      // LARGE NUMBERS
+    display.setTextSize(3);
     display.setTextColor(SSD1306_WHITE);
-    display.setCursor(0, 16);    // Under first line (~16 px down)
+    display.setCursor(0, 16);    // Under first line 
     display.print(timerValue);
 }
 
+//************************************************************
+// Method: stopTimer()
+// Input: NONE 
+// Description: Stop the timer for how long it takes the car
+// to finish its run
+//************************************************************
 void stopTimer() {
     timerRunning = false;  
     timerValue = (millis() - timerStart) / 1000;  // store elapsed seconds
 }
 
+//************************************************************
+// Method: startTimer()
+// Input: NONE 
+// Description:  Start the timer for how long it takes the car
+// to finish its run
+//************************************************************
 void startTimer() {
     timerStart = millis();
     timerValue = 0;
     timerRunning = true;
 }
-
-
 
